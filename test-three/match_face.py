@@ -2,13 +2,13 @@ import face_recognition
 from PIL import Image, ImageDraw
 import os
 
-old_image_path = './img/old/nilim.jpg'
+old_image_path = './img/old/rifat.jpg'
 
 old_image = face_recognition.load_image_file(old_image_path)
 old_image_encodings = face_recognition.face_encodings(old_image)[0]
 
 
-new_image = face_recognition.load_image_file('./img/new/convert.jpg')
+new_image = face_recognition.load_image_file('./img/new/filename.jpg')
 new_face_locations = face_recognition.face_locations(new_image)
 new_face_encodings = face_recognition.face_encodings(new_image, new_face_locations)
 
