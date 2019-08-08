@@ -34,7 +34,7 @@ def face_distance_to_conf(face_distance, face_match_threshold=0.6):
 
 
 
-def match_algorithm(folderName, new_image_file=None):
+def match_algorithm(folderName, new_image_file = None, filename = None):
     old_image_path = './img/old/' + folderName + '/'
 
     for root, dirs, files in  os.walk(old_image_path):
@@ -42,7 +42,6 @@ def match_algorithm(folderName, new_image_file=None):
             if file.endswith("png") or file.endswith("jpg") or file.endswith("jpeg"):
                 print(i)
                 print(len(files))
-
 
                 old_image = face_recognition.load_image_file(old_image_path + file)
                 old_image_encodings = face_recognition.face_encodings(old_image)[0]
@@ -56,22 +55,29 @@ def match_algorithm(folderName, new_image_file=None):
                 new_face_locations = face_recognition.face_locations(new_image)
                 new_face_encodings = face_recognition.face_encodings(new_image, new_face_locations)
 
+                if filename != os.path.basename(file):
+                    print('match')
+                    # Loop through faces in test image
+                    for(top, right, bottom, left), face_encoding in zip(new_face_locations, new_face_encodings):
+                        matches = face_recognition.compare_faces([old_image_encodings], face_encoding, tolerance=0.5)
+                        distance = face_recognition.face_distance([old_image_encodings], face_encoding)
+                        
+                        distance_number = face_distance_to_conf(distance)
+                        distance_percent = distance_number[0] * 100
 
-                # Loop through faces in test image
-                for(top, right, bottom, left), face_encoding in zip(new_face_locations, new_face_encodings):
-                    matches = face_recognition.compare_faces([old_image_encodings], face_encoding, tolerance=0.5)
-                    distance = face_recognition.face_distance([old_image_encodings], face_encoding)
-                    
-                    distance_number = face_distance_to_conf(distance)
-                    distance_percent = distance_number[0] * 100
+                        print('distance', distance_number[0] * 100)
+                        # if match
+                        if True in matches:
+                            return [True, distance_percent, os.path.basename(file)]
 
-                    print('distance', distance_number[0] * 100)
-                    # if match
-                    if True in matches:
-                        return [True, distance_percent, os.path.basename(file)]
+                        elif i == len(files) - 1:
+                            if filename != None:
+                                delete_image(old_image_path + filename)
+                                return [False, distance_percent, os.path.basename(file), "This Image Can not save here its another person image"]
+                            return [False, distance_percent, os.path.basename(file)]
 
-                    elif i == len(files) - 1:
-                        return [False, distance_percent]
+                else:
+                    pass
 
 
 

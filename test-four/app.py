@@ -1,6 +1,7 @@
 import os
 from flask import Flask, request, jsonify
 from face_match import match_algorithm, find_face
+from datetime import datetime
 
 app = Flask(__name__, static_url_path='', static_folder='./',)
 
@@ -16,15 +17,16 @@ def uploadNid():
     if request.method == 'POST':
         nid_number = request.form['nid_number']
         static_file = request.files['the_file']
-        filename = static_file.filename
+
+        now = datetime.now()
+        timestamp = datetime.timestamp(now)
+        filename = str(timestamp) + '.' + static_file.filename
         
         # file formate check
         if filename.endswith("png") or filename.endswith("jpg") or filename.endswith("jpeg"):
             pass
         else:
             return jsonify({"message": "Only jpg or png files are allowed"})
-
-
 
 
         # Match face with others faces
@@ -39,12 +41,30 @@ def uploadNid():
                 static_file.save(old_path)
 
 
-                # face check on image
+                # face and single face check on image
                 has_face = find_face(static_file, old_path)
                 if has_face[0]:
                     pass
                 else:
                     return jsonify({"message":has_face[1]})
+
+
+                # same face check on image
+                isSameFace = match_algorithm(nid_number, static_file, filename)
+                print('isSameFace', isSameFace)
+                if isSameFace == None:
+                    os.remove(old_path)
+                    return jsonify({"message": "Some issue on this image please try again or change this image"})
+                else:    
+                    if isSameFace[0]:
+                        pass
+                    else:
+                        return jsonify({
+                            "nid_number": nid_number,
+                            "image": filename,
+                            "message": isSameFace[3]
+                        })
+
 
                 return jsonify({"nid_number": nid_number, "image": filename, "message": "File save successfully"})
             else:
@@ -54,7 +74,7 @@ def uploadNid():
                 return jsonify({
                     "nid_number": nid_number,
                     "image": filename,
-                    "message": "Creat a folder and File save"
+                    "message": "Create a folder and image save"
                 })
             
 

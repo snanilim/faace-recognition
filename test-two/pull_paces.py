@@ -11,4 +11,4 @@ for face_location in face_locations:
     face_image = image[top:bottom, left:right]
     pil_image = Image.fromarray(face_image)
     pil_image.show()
-    pil_image.save(f`{top}.jpg`)
+    pil_image.save({top}.jpg)
