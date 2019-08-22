@@ -8,7 +8,9 @@ def delete_image(old_path):
     os.remove(old_path)
 
 def find_face(image_file, old_path):
-    image = face_recognition.load_image_file(image_file)
+    print('find face call')
+    print('image_file', image_file)
+    image = face_recognition.load_image_file(old_path)
     face_locations = face_recognition.face_locations(image)
     face_len = len(face_locations)
     print('face_locations', face_len)
