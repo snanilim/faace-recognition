@@ -9,6 +9,63 @@ import re, time, base64
 
 app = Flask(__name__, static_url_path='', static_folder='./',)
 
+
+# file formate check
+def file_formate_check(filename):
+    if filename.endswith("png") or filename.endswith("jpg") or filename.endswith("jpeg"):
+        return True
+    else:
+        return False
+
+
+
+
+def face_validation(static_file, old_path, nid_number, filename, newImg = False):
+    # find face and single face on image
+    has_face = find_face(static_file, old_path)
+
+    print('has_face', has_face)
+
+    if has_face == None:
+        os.remove(old_path)
+        return {"result": False, "message": "Some issue on this image please try again or change this image"}
+    else: 
+        if has_face[0]:
+            pass
+        else:
+            return {"result": False, "message":has_face[1]}
+            # return False
+
+
+    if newImg:
+        return {"result": True}
+    else:
+        pass
+
+
+
+    # same face check on image
+    isSameFace = match_algorithm(nid_number, old_path, filename)
+    print('isSameFace', isSameFace)
+    if isSameFace == None:
+        os.remove(old_path)
+        return {"result": False, "message": "Some issue on this image please try again or change this image"}
+    else:    
+        if isSameFace[0]:
+            return {"result": True}
+        else:
+            return {
+                "result": False,
+                "nid_number": nid_number,
+                "image": filename,
+                "message": isSameFace[3]
+            }
+
+
+
+
+
+
 @app.route('/')
 def index():
     return jsonify({"message": "API Start"})
@@ -33,10 +90,11 @@ def uploadNid():
         now = datetime.now()
         timestamp = datetime.timestamp(now)
         filename = str(timestamp) + '.' + img_name
-        
+
 
         # file formate check
-        if filename.endswith("png") or filename.endswith("jpg") or filename.endswith("jpeg"):
+        response_formate_check = file_formate_check(filename)
+        if response_formate_check:
             pass
         else:
             return jsonify({"message": "Only jpg or png files are allowed"})
@@ -51,32 +109,15 @@ def uploadNid():
             if nid_number in dirs:
                 print('dirs', dirs)
                 old_path = './img/old/' + nid_number + '/' + filename
-                static_file.save(old_path)
+                static_file.convert('RGB').save(old_path)
 
 
-                # face and single face check on image
-                has_face = find_face(static_file, old_path)
-                if has_face[0]:
+                # image and face validation
+                response_face_validation = face_validation(static_file, old_path, nid_number, filename)
+                if response_face_validation['result']:
                     pass
                 else:
-                    return jsonify({"message":has_face[1]})
-
-
-                # same face check on image
-                isSameFace = match_algorithm(nid_number, old_path, filename)
-                print('isSameFace', isSameFace)
-                if isSameFace == None:
-                    os.remove(old_path)
-                    return jsonify({"message": "Some issue on this image please try again or change this image"})
-                else:    
-                    if isSameFace[0]:
-                        pass
-                    else:
-                        return jsonify({
-                            "nid_number": nid_number,
-                            "image": filename,
-                            "message": isSameFace[3]
-                        })
+                    return jsonify(response_face_validation)
 
 
                 return jsonify({"nid_number": nid_number, "image": filename, "message": "File save successfully"})
@@ -84,7 +125,17 @@ def uploadNid():
                 print('no dirs')
                 os.mkdir('./img/old/' + nid_number)
                 os.mkdir('./img/new/' + nid_number)
-                static_file.save('./img/old/' + nid_number + '/' + filename)
+                old_path = './img/old/' + nid_number + '/' + filename
+                static_file.convert('RGB').save(old_path)
+
+
+                # image and face validation
+                response_face_validation = face_validation(static_file, old_path, nid_number, filename, newImg = True)
+                if response_face_validation['result']:
+                    pass
+                else:
+                    return jsonify(response_face_validation)
+
                 return jsonify({
                     "nid_number": nid_number,
                     "image": filename,
@@ -113,18 +164,29 @@ def faceMatch():
 
         filename = img_name
 
-        if filename.endswith("png") or filename.endswith("jpg") or filename.endswith("jpeg"):
+        # file formate check
+        response_formate_check = file_formate_check(filename)
+        if response_formate_check:
             pass
         else:
             return jsonify({"message": "Only jpg or png files are allowed"})
 
         for root, dirs, files in os.walk("./img/new"):
             if nid_number in dirs:
-                static_file.convert('RGB').save('./img/new/' + nid_number + '/compaer.jpg')
+                new_path = './img/new/' + nid_number + '/compaer.jpg'
+                static_file.convert('RGB').save(new_path)
+
+
+                # image and face validation
+                response_face_validation = face_validation(static_file, new_path, nid_number, filename, newImg=True)
+                if response_face_validation['result']:
+                    pass
+                else:
+                    return jsonify(response_face_validation)
+
+
 
                 result = match_algorithm(nid_number)
-                print('result', result)
-
                 if result == None:
                     return jsonify({"message": "Some issue on this image please try again or change this image"})
                 else:
@@ -134,7 +196,7 @@ def faceMatch():
                         "matching_percentage": result[1],
                         "match_image_path": '/img/new/' + nid_number + '/compaer.jpg',
                         "old_image_path": '/img/old/' + nid_number + '/' + result[2],
-                        "message": "Compare are done show result below"
+                        "message": "Compare are done, result show below"
                     })
             else:
                 return jsonify({ "nid_number": nid_number, "message": "This nid number isn't registerd yet" })
