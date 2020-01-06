@@ -119,7 +119,7 @@ def TakeImages():
 
             faces = face_cascade.detectMultiScale(gray, 1.3, 5)             # Detect the faces and store the positions
             for (x, y, w, h) in faces:                                      # Frames  LOCATION X, Y  WIDTH, HEIGHT
-                gray_face = cv2.resize((gray[y: y+h, x: x+w]), (110, 110))  # The Face is isolated and cropped
+                gray_face = cv2.resize((gray[y: y+h, x: x+w]), (200, 200))  # The Face is isolated and cropped
                 eyes = eye_cascade.detectMultiScale(gray_face)
                 for (ex, ey, ew, eh) in eyes:
                     NameFind.draw_box(gray, x, y, w, h)

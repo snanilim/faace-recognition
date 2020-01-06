@@ -105,7 +105,7 @@ def TakeImages():
     userName = (txt2.get())
     # if is_number(userId):
     if True:
-        cam = cv2.VideoCapture(0)
+        cam = cv2.VideoCapture(2)
         cascadeFacePath = './cascades/data/haarcascade_frontalface_default.xml'
         detector = cv2.CascadeClassifier(cascadeFacePath)
         camExitNum = 0
@@ -119,7 +119,7 @@ def TakeImages():
                 camExitNum += 1
                 cv2.imwrite("saveTrainImage/ "+userName +"."+userId +'.'+ str(camExitNum) + ".jpg", gray[y:y+h,x:x+w])
 
-                cv2.imshow('frame', gray)
+            cv2.imshow('frame', gray)
                 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -144,7 +144,7 @@ def TakeImages():
     
 
 def TrainImages():
-    recognizer = cv2.face_LBPHFaceRecognizer.create()
+    recognizer = cv2.face.LBPHFaceRecognizer_create()
     cascadeFacePath = './cascades/data/haarcascade_frontalface_default.xml'
     detector = cv2.CascadeClassifier(cascadeFacePath)
     faces, userIDs = getImageLabels('saveTrainImage')
